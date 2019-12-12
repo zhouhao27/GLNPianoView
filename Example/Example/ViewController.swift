@@ -23,26 +23,13 @@ class ViewController: UIViewController, GLNPianoViewDelegate {
         super.viewDidLoad()
         keyboard.delegate = self
 
-        // Customm labels
-        keyboard.setLabel(for: 60, text: "Do")
-        keyboard.setLabel(for: 62, text: "Re")
-        keyboard.setLabel(for: 64, text: "Mi")
-
-        keyNumberStepper.value = Double(keyboard.numberOfKeys)
-        keyNumberLabel.text = String(keyNumberStepper.value)
-        keyNumberStepper.layer.cornerRadius = 8.0
-        keyNumberStepper.layer.masksToBounds = true
-
-        octaveStepper.layer.cornerRadius = 8.0
-        octaveStepper.layer.masksToBounds = true
-        octaveLabel.text = String(octaveStepper.value)
-
         audioEngine.start()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
+/*
         let layer = CAGradientLayer()
         layer.frame = fascia.bounds
         layer.colors = [UIColor.black.cgColor, UIColor.darkGray.cgColor, UIColor.black.cgColor]
@@ -53,6 +40,8 @@ class ViewController: UIViewController, GLNPianoViewDelegate {
         // Auto highlighting/playing examples
         noteDemo()
         //chordDemo()
+*/
+      setupPianoView()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -61,11 +50,57 @@ class ViewController: UIViewController, GLNPianoViewDelegate {
         keyboard.highlightKey(noteNumber: 75, color: UIColor.red.withAlphaComponent(0.7), resets: false)
         keyboard.highlightKey(noteNumber: 79, color: UIColor.red.withAlphaComponent(0.7), resets: false)
     }
-
+  
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
 
+  private func setupPianoView() {
+    
+    // Customm labels
+    keyboard.setLabel(for: 60, text: "Do")
+    keyboard.setLabel(for: 62, text: "Re")
+    keyboard.setLabel(for: 64, text: "Mi")
+
+    keyNumberStepper.value = Double(keyboard.numberOfKeys)
+    keyNumberLabel.text = String(keyNumberStepper.value)
+    keyNumberStepper.layer.cornerRadius = 8.0
+    keyNumberStepper.layer.masksToBounds = true
+
+    octaveStepper.layer.cornerRadius = 8.0
+    octaveStepper.layer.masksToBounds = true
+    octaveLabel.text = String(octaveStepper.value)
+
+    // rotate the keyboard
+    var transform = CATransform3DIdentity;
+    transform.m34 = 1.0 / 400.0;
+    transform = CATransform3DRotate(transform, CGFloat(15 * Double.pi / 180), -1, 0, 0)
+
+    keyboard.layer.transform = transform
+    setAnchorPoint(anchorPoint: CGPoint(x: 0.5, y: 1.0), forView: keyboard)
+    
+    // update the layout
+    keyboard.octave = Int(octaveStepper.value)    
+  }
+  
+  func setAnchorPoint(anchorPoint: CGPoint, forView view: UIView) {
+    var newPoint = CGPoint(x:view.bounds.size.width * anchorPoint.x, y: view.bounds.size.height * anchorPoint.y)
+    var oldPoint = CGPoint(x:view.bounds.size.width * view.layer.anchorPoint.x, y: view.bounds.size.height * view.layer.anchorPoint.y)
+      
+    newPoint = newPoint.applying(view.transform)
+    oldPoint = oldPoint.applying(view.transform)
+      
+      var position = view.layer.position
+      position.x -= oldPoint.x
+      position.x += newPoint.x
+      
+      position.y -= oldPoint.y
+      position.y += newPoint.y
+      
+      view.layer.position = position
+      view.layer.anchorPoint = anchorPoint
+  }
+    
     private func chordDemo() {
         autoHighlight(score: [["C4", "E4", "G4", "B4"],
                               ["D4", "F#4", "A4"],
